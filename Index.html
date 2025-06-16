@@ -1,0 +1,298 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title> Stephanie's Cozy Future</title>
+  <!-- Load the cozy font from Google Fonts -->
+   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-image: url(cozybg.png);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      font-family: 'quicksand', sans-serif;
+      color: #5a4a42;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      font-size: 1.2rem;
+      color: #fdf6ee;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .progress-container {
+      background: #a4c295; /* soft sage green */
+      border-radius: 25px;
+      width: 300px; /* fixed width so we can calculate car position */
+      height: 30px;
+      margin: 2rem auto;
+      overflow: hidden; /* This HIDES anything that goes outside its bounds! */
+      position: relative; /* needed for car emoji absolute positioning */ 
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2); /*subtle inner shadow */
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #8b5e3c, #a67857); /* warm brown fill*/
+      height: 100%;
+      width: 0%;
+      transition: width 0.6s ease-in-out;
+      border-radius: 25px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* soft depth */
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    #milestone-emoji {
+      position: absolute;
+      top: 0px;
+      left: 0;
+      font-size: 24px;
+      transition: left 0.3s;
+      transform: scaleX(-1);
+      z-index: 10;
+      animation: car-rock 1s infinite;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background: #b58d6f;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0.5rem;
+    }
+    button:hover {
+      background-color: #a67857;
+      transform: scale(1.05);
+      transition: all 0.2s ease-in-out;
+    }
+    @keyframes car-rock {
+        0% { transform: scaleX(-1) rotate(0deg); }
+        25% { transform: scaleX(-1) rotate(5deg); }
+        50% { transform: scaleX(-1) rotate(0deg); }
+        75% { transform: scaleX(-1) rotate(-5deg); }
+        100% { transform: scaleX(-1) rotate(0deg); }
+    }
+    @keyframes car-zoom {
+      0% { transform: scaleX(-1) translateY(0); }
+      25% { transform: scaleX(-1) translateY(-5px); }
+      50% { transform: scaleX(-1) translateY(0); }
+      75% { transform: scaleX(-1) translateY(-5px); }
+      100% { transform: scaleX(-1) translateY(0); }
+    }
+
+    .car-zoom {
+      animation: car-zoom 0.6s ease-in-out
+    }
+    #savings-text {
+        font-size: 1.1rem;
+        color: #fdf6ee;
+        margin-bottom: 1rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    #milestone-message {
+        color: #fdf6ee;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    #rain-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        pointer-events: none;
+        width: 100%;
+        height: 100%;
+    }
+    @keyframes rain-fall {
+        0% {
+            background-position: 0 -100%;
+        }
+        100% {
+            background-position: 0 100%;
+        }
+    }
+    .home-icon {
+      font-size: 24px;
+      margin-top: -67px; /* pull it up more */
+      margin-left: 330px; /* adjust left if needed */
+      color: fdf6ee;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+    #play-music {
+      position: fixed !important;
+      bottom: 10px !important;
+      right: 10px !important;
+      font-size: 1rem; /* match your other buttons*/
+      padding: 0.5rem 1rem;
+      background-color: #b58d6f; /* match ur cozy button color*/
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0;
+      z-index: 9999;
+      transition: all 0.2s ease-in-out;
+    }
+    #play-music:hover{
+      background-color: #a67857;
+      transform: scale(1.05);
+    }
+    .button-group {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Stephanie's Cozy Future</h1>
+  <p>Your peace is at home, waiting...</p>
+  <p id="savings-text">You've saved $0 out of $5,000</p>
+  <p id="milestone-message"></p>
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+    <span id="milestone-emoji">🚗</span>
+
+  <div class="home-icon">🏡</div>
+
+  <div class="button-group">
+    <button onclick="addFunds()">Add Funds</button>
+    <button onclick="resetFunds()">Reset</button>
+  </div>
+
+  <script>
+    let currentFunds = parseFloat(localStorage.getItem("currentFunds")) || 0;
+    const goal = 5000; // example goal amount
+
+    function updateProgress() {
+      const progressPercent = Math.min((currentFunds / goal) * 100, 100);
+      const progressBar = document.getElementById("progress-bar");
+      const car = document.getElementById("milestone-emoji");
+      const container = document.querySelector(".progress-container");
+
+      //steph added right here per chat gpt
+      document.getElementById("savings-text").textContent = `You’ve saved $${currentFunds.toFixed(2)} out of $${goal.toFixed(2)}`;
+      const message = document.getElementById("milestone-message");
+
+      if (progressPercent >= 100) {
+        message.textContent = "🎉Bean & Ameera say: You're ready for us in our cozy home!";
+      } else if (progressPercent >= 75) {
+        message.textContent = "So close we can feel the peace in the air!";
+      } else if (progressPercent >= 50) {
+        message.textContent = "Halfway home, Mom!🎉";
+      } else if (progressPercent >= 25) {
+        message.textContent = "You're making real progress";
+      } else {
+        message.textContent = "Every dollar is one step closer";
+      }
+
+      progressBar.style.width = progressPercent + "%";
+
+      // Calculate car position inside the container
+      const containerWidth = container.clientWidth;
+      const carWidth = car.offsetWidth;
+      const maxLeft = containerWidth - carWidth;
+      const leftPos = (progressPercent / 100) * maxLeft;
+
+      car.style.left = leftPos + "px";
+
+      if (progressPercent === 100) {
+        alert("🎉 Bean & Ameera say: You're ready for us in our cozy home!");
+      }
+    }
+
+    function addFunds() {
+      const amount = prompt("How much did you add to your fund?");
+      if (amount !== null) {
+        const numAmount = parseFloat(amount);
+        if (!isNaN(numAmount) && numAmount > 0) {
+          currentFunds += numAmount;
+          localStorage.setItem("currentFunds", currentFunds);
+          updateProgress();
+
+          // 🚗 Add bounce effect to the car
+          const car = document.getElementById("milestone-emoji");
+          car.classList.add("car-zoom");
+
+          // Remove class so it can animate again next time
+          car.addEventListener("animationend",() => {
+            car.classList.remove("car-zoom");
+          }, { once: true });
+        } else {
+          alert("Please enter a valid number.");
+        }
+      }
+    }
+    function resetFunds() {
+        const confirmReset = confirm("Are you sure you want to reset your fund?");
+        if (confirmReset) {
+            currentFunds = 0;
+            localStorage.setItem("currentFunds", currentFunds);
+            updateProgress();
+        }
+    }
+
+    window.onload = function() {
+      updateProgress();
+    };
+  </script> <!-- closes original script-->
+  <canvas id="rain-canvas"></canvas>
+  <script>
+    const canvas = document.getElementById("rain-canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const raindrops = [];
+    const dropCount = 100;
+
+    for (let i = 0; i < dropCount; i++) {
+      raindrops.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        length: Math.random() * 20 + 10,
+        speed: Math.random() * 4 + 4,
+        opacity: Math.random() * 0.4 + 0.2
+      })
+    }
+    function drawRain() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 1;
+
+      raindrops.forEach(drop => {
+        ctx.beginPath();
+        ctx.moveTo(drop.x, drop.y);
+        ctx.lineTo(drop.x, drop.y + drop.length);
+        ctx.stroke();
+
+        drop.y += drop.speed;
+
+        if (drop.y > canvas.height) {
+          drop.y = -drop.length;
+          drop.x = Math.random() * canvas.width;
+        }
+      });
+      requestAnimationFrame (drawRain);
+    }
+    drawRain();
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+
+  <button id="play-music" onclick="window.open('https://open.spotify.com/playlist/37i9dQZF1DX3Ogo9pFvBkY', '_blank')">
+    Play Music
+  </button>
+</body>
+</html>
